@@ -12,13 +12,30 @@ from mcp.client.stdio import stdio_client
 
 def main():
     # Argument parsing
-    parser = argparse.ArgumentParser(description="Use AI to interact with REST APIs via MCP")
-    parser.add_argument("--question", "-q", type=str, required=False, 
-                       help="Your question/request for the AI to process")
-    parser.add_argument("--model", "-m", type=str, default="gemini-2.0-flash-exp",
-                       help="AI model to use (default: gemini-2.0-flash-exp)")
-    parser.add_argument("--temperature", "-t", type=float, default=0.1,
-                       help="AI temperature setting (default: 0.1)")
+    parser = argparse.ArgumentParser(
+        description="Use AI to interact with REST APIs via MCP"
+    )
+    parser.add_argument(
+        "--question",
+        "-q",
+        type=str,
+        required=False,
+        help="Your question/request for the AI to process",
+    )
+    parser.add_argument(
+        "--model",
+        "-m",
+        type=str,
+        default="gemini-2.0-flash-exp",
+        help="AI model to use (default: gemini-2.0-flash-exp)",
+    )
+    parser.add_argument(
+        "--temperature",
+        "-t",
+        type=float,
+        default=0.1,
+        help="AI temperature setting (default: 0.1)",
+    )
     args = parser.parse_args()
 
     # Get API key
@@ -29,7 +46,7 @@ def main():
 
     # Default prompt if none provided
     prompt = args.question or input("Enter your question: ")
-    
+
     if not prompt.strip():
         print("No question provided. Exiting.")
         sys.exit(1)
@@ -40,7 +57,7 @@ def main():
 
 async def run_client(prompt: str, model: str, temperature: float, api_key: str):
     """Run the MCP client with AI integration"""
-    
+
     # Initialize Gemini client
     try:
         client = genai.Client(api_key=api_key)
@@ -63,7 +80,9 @@ async def run_client(prompt: str, model: str, temperature: float, api_key: str):
 
                 # Get available tools from MCP server
                 mcp_tools = await session.list_tools()
-                print(f"Connected to MCP server with {len(mcp_tools.tools)} tools available")
+                print(
+                    f"Connected to MCP server with {len(mcp_tools.tools)} tools available"
+                )
 
                 # Convert MCP tools to Gemini format
                 tools = [
@@ -101,12 +120,16 @@ async def run_client(prompt: str, model: str, temperature: float, api_key: str):
                     return
 
                 # Process the response
-                if (response.candidates and 
-                    response.candidates[0].content.parts and
-                    response.candidates[0].content.parts[0].function_call):
-                    
+                if (
+                    response.candidates
+                    and response.candidates[0].content.parts
+                    and response.candidates[0].content.parts[0].function_call
+                ):
+
                     # AI wants to call a function
-                    function_call = response.candidates[0].content.parts[0].function_call
+                    function_call = (
+                        response.candidates[0].content.parts[0].function_call
+                    )
                     print(f"AI is calling function: {function_call.name}")
                     print(f"Arguments: {dict(function_call.args)}")
                     print("-" * 50)
@@ -114,8 +137,7 @@ async def run_client(prompt: str, model: str, temperature: float, api_key: str):
                     try:
                         # Execute the function call via MCP
                         result = await session.call_tool(
-                            function_call.name, 
-                            arguments=dict(function_call.args)
+                            function_call.name, arguments=dict(function_call.args)
                         )
 
                         print("Result:")
@@ -126,7 +148,7 @@ async def run_client(prompt: str, model: str, temperature: float, api_key: str):
                             print(json.dumps(result_data, indent=2, ensure_ascii=False))
                         except (json.JSONDecodeError, KeyError, IndexError):
                             # If not JSON, print as-is
-                            if hasattr(result, 'content') and result.content:
+                            if hasattr(result, "content") and result.content:
                                 print(result.content[0].text)
                             else:
                                 print(str(result))
@@ -137,7 +159,7 @@ async def run_client(prompt: str, model: str, temperature: float, api_key: str):
                 else:
                     # AI responded without function calls
                     print("AI Response:")
-                    if hasattr(response, 'text') and response.text:
+                    if hasattr(response, "text") and response.text:
                         print(response.text)
                     else:
                         print("No response generated")
